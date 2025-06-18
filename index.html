@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>YeSuno - P2P Chat</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="YeSuno: Private, secure, peer-to-peer chat. No server, no tracking. Just you and your peer.">
+  <meta property="og:title" content="YeSuno - P2P Chat">
+  <meta property="og:description" content="YeSuno: Private, secure, peer-to-peer chat. No server, no tracking. Just you and your peer.">
+  <meta property="og:image" content="logo_assets/social_og_1200x630.png">
+  <meta property="og:url" content="https://yesuno.com/">
+  <meta name="theme-color" content="#1976D2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" type="image/png" sizes="32x32" href="logo_assets/favicon_32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="logo_assets/favicon_16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="logo_assets/logo_icon_180x180.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="src/css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="app-header minimal-header">
+      <img src="logo_assets/yesuno_logo.svg" alt="YeSuno Logo" class="app-logo-svg-minimal" />
+      <button id="darkModeToggle" class="dark-mode-toggle" aria-label="Toggle dark mode">🌙</button>
+    </header>
+    <main class="minimal-main">
+      <div class="minimal-room-panel">
+        <input type="text" class="room-input" id="roomInput" placeholder="Enter room name" aria-label="Room name">
+        <button onclick="joinRoom()">Join Room</button>
+      </div>
+      <div class="minimal-tagline">Private. Peer-to-peer. No server.</div>
+    </main>
+    <div id="peerName" class="peer-name"></div>
+    <div class="connection-panel" style="display:none"></div>
+    <div id="chat"></div>
+    <div class="message-input-row">
+      <input id="messageInput" placeholder="Type your message and press Enter..." aria-label="Type your message">
+      <button id="sendButton" class="send-btn" aria-label="Send">Send</button>
+    </div>
+    <footer class="app-footer">
+      <span>&copy; <span id="year"></span> <a href="https://yesuno.com" target="_blank" rel="noopener">yesuno.com</a> &mdash; All rights reserved.</span>
+    </footer>
+  </div>
+  <!-- Load scripts in correct order -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="src/js/utils/config.js"></script>
+  <script src="src/js/components/UI.js"></script>
+  <script src="src/js/components/ConnectionManager.js"></script>
+  <script>
+    // Make functions globally accessible
+    window.sendMessage = sendMessage;
+    window.joinRoom = joinRoom;
+    window.cleanup = cleanup;
+    // Set up event handlers
+    setMessageInputHandler(sendMessage);
+    setRoomInputHandler(function(e) {
+      if (e.key === 'Enter') {
+        joinRoom();
+      }
+    });
+    // Send button click
+    document.getElementById('sendButton').onclick = function() {
+      var e = { key: 'Enter', target: document.getElementById('messageInput') };
+      sendMessage(e);
+    };
+    // Dark mode toggle
+    var darkMode = false;
+    var toggleBtn = document.getElementById('darkModeToggle');
+    toggleBtn.onclick = function() {
+      darkMode = !darkMode;
+      document.body.classList.toggle('dark-mode', darkMode);
+      toggleBtn.textContent = darkMode ? '☀️' : '🌙';
+    };
+    // Set year in footer
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

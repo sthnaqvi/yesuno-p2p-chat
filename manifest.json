@@ -1,0 +1,26 @@
+{
+  "name": "YeSuno",
+  "short_name": "YeSuno",
+  "description": "Private, secure, peer-to-peer chat. No server, no tracking. Just you and your peer.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1976D2",
+  "theme_color": "#1976D2",
+  "icons": [
+    {
+      "src": "logo_assets/app_icon_1024x1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    },
+    {
+      "src": "logo_assets/logo_icon_180x180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "logo_assets/logo_square_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+} 
