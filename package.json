@@ -1,6 +1,6 @@
 {
   "name": "yesuno-p2p-chat",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "YeSuno: Private, secure, peer-to-peer chat. No server, no tracking. Just you and your peer.",
   "keywords": [
     "p2p",
