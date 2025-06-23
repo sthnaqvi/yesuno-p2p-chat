@@ -9,72 +9,281 @@
   <meta property="og:description" content="YeSuno: Private, secure, peer-to-peer chat. No server, no tracking. Just you and your peer.">
   <meta property="og:image" content="logo_assets/social_og_1200x630.png">
   <meta property="og:url" content="https://yesuno.com/">
-  <meta name="theme-color" content="#1976D2">
+  <meta name="theme-color" content="#6366f1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="icon" type="image/png" sizes="32x32" href="logo_assets/favicon_32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="logo_assets/favicon_16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="logo_assets/logo_icon_180x180.png">
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Modern UI Libraries -->
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <!-- 
+    Note: For production deployment, replace the Tailwind CDN with a proper build:
+    1. Install Tailwind CSS: npm install -D tailwindcss
+    2. Initialize: npx tailwindcss init
+    3. Build CSS: npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch
+    4. Replace this CDN link with: <link href="./dist/output.css" rel="stylesheet">
+  -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            gray: {
+              50: '#f9fafb',
+              100: '#f3f4f6',
+              200: '#e5e7eb',
+              300: '#d1d5db',
+              400: '#9ca3af',
+              500: '#6b7280',
+              600: '#4b5563',
+              700: '#374151',
+              800: '#1f2937',
+              900: '#111827',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+  
+  <!-- Custom styles -->
   <link rel="stylesheet" href="src/css/styles.css">
 </head>
-<body>
-  <div class="container">
-    <header class="app-header minimal-header">
-      <img src="logo_assets/yesuno_logo.svg" alt="YeSuno Logo" class="app-logo-svg-minimal" />
-      <button id="darkModeToggle" class="dark-mode-toggle" aria-label="Toggle dark mode">🌙</button>
-    </header>
-    <main class="minimal-main">
-      <div class="minimal-room-panel">
-        <input type="text" class="room-input" id="roomInput" placeholder="Enter room name" aria-label="Room name">
-        <button onclick="joinRoom()">Join Room</button>
+<body class="bg-gray-50 dark:bg-gray-900">
+  <div class="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900" 
+       x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" 
+       x-init="
+         if (localStorage.getItem('darkMode') === 'true') {
+           darkMode = true;
+           document.documentElement.classList.add('dark');
+         } else {
+           darkMode = false;
+           document.documentElement.classList.remove('dark');
+         }
+         $watch('darkMode', val => {
+           localStorage.setItem('darkMode', val);
+           document.documentElement.classList.toggle('dark', val);
+         });">
+    
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
+      <div class="max-w-4xl mx-auto flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <img src="logo_assets/yesuno_logo.svg" alt="YeSuno Logo" class="h-8 w-auto" />
+          <h1 class="text-xl font-semibold text-gray-900 dark:text-white">YeSuno</h1>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="soundButton" onclick="toggleSound()" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
+            <div id="soundIcon">
+              <i data-feather="volume-x" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            </div>
+          </button>
+          <button @click="darkMode = !darkMode" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
+            <i data-feather="moon" x-show="!darkMode" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            <i data-feather="sun" x-show="darkMode" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+          </button>
+        </div>
       </div>
-      <div class="minimal-tagline">Private. Peer-to-peer. No server.</div>
-      <div class="status" id="connectionStatus">Not connected</div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-4xl mx-auto w-full px-6 py-6 overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-900">
+      
+      <!-- Connection Panel -->
+      <div id="connectionPanel" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-4">
+        <div class="text-center space-y-4">
+          <div class="space-y-2">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Join a Chat Room</h2>
+            <p class="text-gray-600 dark:text-gray-300 text-sm">Enter a room name to start chatting privately</p>
+          </div>
+          
+          <div class="max-w-md mx-auto space-y-3">
+            <div class="relative">
+              <i data-feather="hash" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500"></i>
+              <input type="text" 
+                     id="roomInput" 
+                     placeholder="Enter room name" 
+                     class="w-full pl-8 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" />
+            </div>
+            
+            <button onclick="joinRoom()" 
+                    id="joinButton"
+                    class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center space-x-2 text-sm">
+              <i data-feather="users" class="w-4 h-4"></i>
+              <span>Join Room</span>
+            </button>
+          </div>
+          
+          <div class="flex items-center justify-center space-x-3 text-xs text-gray-500 dark:text-gray-400">
+            <div class="flex items-center space-x-1">
+              <i data-feather="shield" class="w-3 h-3"></i>
+              <span>Private</span>
+            </div>
+            <div class="w-1 h-1 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
+            <div class="flex items-center space-x-1">
+              <i data-feather="wifi" class="w-3 h-3"></i>
+              <span>P2P</span>
+            </div>
+            <div class="w-1 h-1 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
+            <div class="flex items-center space-x-1">
+              <i data-feather="server" class="w-3 h-3"></i>
+              <span>No Server</span>
+            </div>
+          </div>
+        </div>
+        
+        <div id="connectionStatus" class="mt-4 text-center text-xs font-medium text-gray-600 dark:text-gray-400">
+          Not connected
+        </div>
+      </div>
+
+      <!-- Peer Name Display - Always present to prevent layout shifting -->
+      <div id="peerName" class="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-100 px-3 py-2 rounded-lg text-center font-medium mb-4 text-sm h-10 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-200" style="display: none;">
+        <div class="flex items-center justify-center space-x-2">
+          <i data-feather="user" class="w-4 h-4"></i>
+          <span>Waiting for peer...</span>
+        </div>
+      </div>
+
+      <!-- Chat Container -->
+      <div id="chatContainer" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1" style="display: none !important;">
+        <div id="chat" class="flex-1 overflow-y-auto p-4 space-y-3 bg-white dark:bg-gray-800"></div>
+        
+        <!-- Message Input -->
+        <div class="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+          <div class="flex items-center space-x-2">
+            <input id="messageInput" 
+                   placeholder="Type your message..." 
+                   class="flex-1 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg px-3 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" />
+            <button id="sendButton" 
+                    class="bg-indigo-500 hover:bg-indigo-600 text-white p-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex-shrink-0">
+              <i data-feather="send" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <!-- Typing indicator for current user - always present but hidden -->
+          <div id="userTypingIndicator" class="mt-2 h-5 flex items-center space-x-1 opacity-0 pointer-events-none transition-all duration-200">
+            <div class="typing-dots-small">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">You are typing...</span>
+          </div>
+        </div>
+      </div>
     </main>
-    <div id="peerName" class="peer-name"></div>
-    <div class="connection-panel" style="display:none"></div>
-    <div id="chat"></div>
-    <div class="message-input-row">
-      <input id="messageInput" placeholder="Type your message and press Enter..." aria-label="Type your message">
-      <button id="sendButton" class="send-btn" aria-label="Send">Send</button>
-    </div>
-    <footer class="app-footer">
-      <span>&copy; <span id="year"></span> <a href="https://yesuno.com" target="_blank" rel="noopener">yesuno.com</a> &mdash; All rights reserved.</span>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-3 flex-shrink-0 mt-auto">
+      <div class="max-w-4xl mx-auto text-center text-xs text-gray-500 dark:text-gray-400">
+        <span>&copy; <span id="year"></span> <a href="https://yesuno.com" target="_blank" rel="noopener" class="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">yesuno.com</a> &mdash; All rights reserved.</span>
+      </div>
     </footer>
   </div>
+
+  <!-- Loading Spinner Component -->
+  <div id="loadingSpinner" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-xl">
+      <div class="flex items-center space-x-3">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500"></div>
+        <div class="text-gray-700 dark:text-gray-300 font-medium text-sm">Connecting...</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Load scripts in correct order -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="src/js/utils/config.js"></script>
   <script src="src/js/components/UI.js"></script>
   <script src="src/js/components/ConnectionManager.js"></script>
   <script>
-    // Make functions globally accessible
-    window.sendMessage = sendMessage;
-    window.joinRoom = joinRoom;
-    window.cleanup = cleanup;
-    // Set up event handlers
-    setMessageInputHandler(sendMessage);
-    setRoomInputHandler(function(e) {
-      if (e.key === 'Enter') {
-        joinRoom();
+    // Initialize Feather icons
+    feather.replace();
+    
+    // Ensure chat window and peer name are hidden on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      var chatContainer = document.getElementById('chatContainer');
+      var peerNameDisplay = document.getElementById('peerName');
+      var connectionPanel = document.getElementById('connectionPanel');
+      
+      if (chatContainer) {
+        chatContainer.style.display = 'none';
+        chatContainer.classList.add('hidden');
+      }
+      
+      if (peerNameDisplay) {
+        peerNameDisplay.style.display = 'none';
+        peerNameDisplay.style.opacity = '0';
+        peerNameDisplay.style.pointerEvents = 'none';
+      }
+      
+      if (connectionPanel) {
+        connectionPanel.classList.remove('hidden');
       }
     });
-    // Send button click
-    document.getElementById('sendButton').onclick = function() {
-      var e = { key: 'Enter', target: document.getElementById('messageInput') };
-      sendMessage(e);
-    };
-    // Dark mode toggle
-    var darkMode = false;
-    var toggleBtn = document.getElementById('darkModeToggle');
-    toggleBtn.onclick = function() {
-      darkMode = !darkMode;
-      document.body.classList.toggle('dark-mode', darkMode);
-      toggleBtn.textContent = darkMode ? '☀️' : '🌙';
-    };
+    
+    // Initialize sound button after DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof updateSoundButton === 'function') {
+        updateSoundButton(); // Initialize sound button state
+      }
+    });
+    
+    // Set up event handlers after a short delay to ensure functions are loaded
+    setTimeout(function() {
+      // Make functions globally accessible
+      if (typeof sendMessage !== 'undefined') window.sendMessage = sendMessage;
+      if (typeof joinRoom !== 'undefined') window.joinRoom = joinRoom;
+      if (typeof cleanup !== 'undefined') window.cleanup = cleanup;
+      if (typeof toggleSound !== 'undefined') window.toggleSound = toggleSound;
+      
+      // Set up event handlers
+      if (typeof setMessageInputHandler !== 'undefined') {
+        setMessageInputHandler(sendMessage);
+      }
+      if (typeof setRoomInputHandler !== 'undefined') {
+        setRoomInputHandler(function(e) {
+          if (e.key === 'Enter') {
+            joinRoom();
+          }
+        });
+      }
+      
+      // Send button click
+      var sendButton = document.getElementById('sendButton');
+      if (sendButton && typeof sendMessage !== 'undefined') {
+        sendButton.onclick = function() {
+          var e = { key: 'Enter', target: document.getElementById('messageInput') };
+          sendMessage(e);
+        };
+      }
+      
+      // Add typing detection for message input
+      var messageInput = document.getElementById('messageInput');
+      if (messageInput && typeof handleTyping !== 'undefined') {
+        messageInput.addEventListener('input', function(e) {
+          if (typeof handleTyping === 'function') {
+            handleTyping();
+          }
+        });
+        
+        messageInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && typeof sendMessage !== 'undefined') {
+            sendMessage(e);
+          }
+        });
+      }
+    }, 200);
+    
     // Set year in footer
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
+
